@@ -26,6 +26,7 @@
 #include "sde_connector.h"
 #include "dsi_drm.h"
 #include "sde_trace.h"
+#include "sde_encoder.h"
 
 static BLOCKING_NOTIFIER_HEAD(drm_notifier_list);
 
@@ -561,6 +562,8 @@ static bool dsi_bridge_mode_fixup(struct drm_bridge *bridge,
 	struct dsi_display_mode dsi_mode, cur_dsi_mode, *panel_dsi_mode;
 	struct drm_display_mode cur_mode;
 	struct drm_crtc_state *crtc_state;
+	bool clone_mode = false;
+	struct drm_encoder *encoder;
 
 	crtc_state = container_of(mode, struct drm_crtc_state, mode);
 
@@ -625,6 +628,14 @@ static bool dsi_bridge_mode_fixup(struct drm_bridge *bridge,
 			return false;
 		}
 
+		drm_for_each_encoder(encoder, crtc_state->crtc->dev) {
+			if (encoder->crtc != crtc_state->crtc)
+				continue;
+
+			if (sde_encoder_in_clone_mode(encoder))
+				clone_mode = true;
+		}
+
 		cur_mode = crtc_state->crtc->mode;
 
 		/* No DMS/VRR when drm pipeline is changing */
@@ -635,13 +646,15 @@ static bool dsi_bridge_mode_fixup(struct drm_bridge *bridge,
 			 display->is_cont_splash_enabled))
 			dsi_mode.dsi_mode_flags |= DSI_MODE_FLAG_DMS;
 
-		/* Reject seemless transition when active changed. */
-		if (crtc_state->active_changed &&
+		/* Reject seemless transition when active/connectors changed.*/
+		if ((crtc_state->active_changed ||
+			(crtc_state->connectors_changed && clone_mode)) &&
 			((dsi_mode.dsi_mode_flags & DSI_MODE_FLAG_VRR) ||
 			(dsi_mode.dsi_mode_flags & DSI_MODE_FLAG_DYN_CLK))) {
-			pr_err("seamless upon active changed 0x%x %d\n",
-				dsi_mode.dsi_mode_flags,
-				crtc_state->active_changed);
+			pr_err("seamless on active/conn(%d/%d) changed 0x%x\n",
+				crtc_state->active_changed,
+				crtc_state->connectors_changed,
+				dsi_mode.dsi_mode_flags);
 			return false;
 		}
 	}

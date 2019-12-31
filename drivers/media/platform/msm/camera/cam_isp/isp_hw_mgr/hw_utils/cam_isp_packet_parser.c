@@ -71,6 +71,8 @@ int cam_isp_add_change_base(
 			hw_entry[num_ent].handle = kmd_buf_info->handle;
 			hw_entry[num_ent].len    = get_base.cmd.used_bytes;
 			hw_entry[num_ent].offset = kmd_buf_info->offset;
+			/* Marking change base as IOCFG to reapply on bubble */
+			hw_entry[num_ent].flags  = CAM_ISP_IOCFG_BL;
 			CAM_DBG(CAM_ISP,
 				"num_ent=%d handle=0x%x, len=%u, offset=%u",
 				num_ent,
@@ -315,10 +317,7 @@ int cam_isp_add_command_buffers(
 					hw_entry[num_ent].handle,
 					hw_entry[num_ent].len,
 					hw_entry[num_ent].offset);
-
-				if (cmd_meta_data ==
-					CAM_ISP_PACKET_META_DMI_LEFT)
-					hw_entry[num_ent].flags = 0x1;
+				hw_entry[num_ent].flags = CAM_ISP_IQ_BL;
 
 				num_ent++;
 			}
@@ -337,9 +336,7 @@ int cam_isp_add_command_buffers(
 					hw_entry[num_ent].len,
 					hw_entry[num_ent].offset);
 
-				if (cmd_meta_data ==
-					CAM_ISP_PACKET_META_DMI_RIGHT)
-					hw_entry[num_ent].flags = 0x1;
+				hw_entry[num_ent].flags = CAM_ISP_IQ_BL;
 				num_ent++;
 			}
 			break;
@@ -355,8 +352,7 @@ int cam_isp_add_command_buffers(
 				hw_entry[num_ent].handle,
 				hw_entry[num_ent].len,
 				hw_entry[num_ent].offset);
-			if (cmd_meta_data == CAM_ISP_PACKET_META_DMI_COMMON)
-				hw_entry[num_ent].flags = 0x1;
+			hw_entry[num_ent].flags = CAM_ISP_IQ_BL;
 
 			num_ent++;
 			break;
@@ -387,6 +383,7 @@ int cam_isp_add_command_buffers(
 						rc);
 					return rc;
 				}
+				hw_entry[num_ent].flags = CAM_ISP_IQ_BL;
 				num_ent = prepare->num_hw_update_entries;
 			}
 			break;
@@ -409,6 +406,7 @@ int cam_isp_add_command_buffers(
 						rc);
 					return rc;
 				}
+				hw_entry[num_ent].flags = CAM_ISP_IQ_BL;
 				num_ent = prepare->num_hw_update_entries;
 			}
 			break;
@@ -429,6 +427,7 @@ int cam_isp_add_command_buffers(
 					"Failed in processing blobs %d", rc);
 				return rc;
 			}
+			hw_entry[num_ent].flags = CAM_ISP_IQ_BL;
 			num_ent = prepare->num_hw_update_entries;
 		}
 			break;
@@ -813,6 +812,8 @@ int cam_isp_add_io_buffers(
 		prepare->hw_update_entries[num_ent].len = io_cfg_used_bytes;
 		prepare->hw_update_entries[num_ent].offset =
 			kmd_buf_info->offset;
+		prepare->hw_update_entries[num_ent].flags = CAM_ISP_IOCFG_BL;
+
 		CAM_DBG(CAM_ISP,
 			"num_ent=%d handle=0x%x, len=%u, offset=%u",
 			num_ent,
@@ -919,6 +920,9 @@ int cam_isp_add_reg_update(
 		prepare->hw_update_entries[num_ent].len = reg_update_size;
 		prepare->hw_update_entries[num_ent].offset =
 			kmd_buf_info->offset;
+		/* Marking reg update as IOCFG to reapply on bubble */
+		prepare->hw_update_entries[num_ent].flags = CAM_ISP_IOCFG_BL;
+
 		CAM_DBG(CAM_ISP,
 			"num_ent=%d handle=0x%x, len=%u, offset=%u",
 			num_ent,

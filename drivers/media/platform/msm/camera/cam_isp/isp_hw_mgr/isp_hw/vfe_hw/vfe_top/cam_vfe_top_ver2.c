@@ -415,6 +415,19 @@ static int cam_vfe_top_mux_get_reg_update(
 	return -EINVAL;
 }
 
+static int cam_vfe_top_mux_get_rdi_irq_mask(
+	struct cam_vfe_top_ver2_priv *top_priv,
+	void *cmd_args, uint32_t arg_size)
+{
+	struct cam_isp_hw_get_cmd_update  *cmd_update = cmd_args;
+
+	if (cmd_update->res->process_cmd)
+		return cmd_update->res->process_cmd(cmd_update->res,
+			CAM_ISP_HW_CMD_GET_RDI_IRQ_MASK, cmd_args, arg_size);
+
+	return -EINVAL;
+}
+
 static int cam_vfe_get_irq_register_dump(
 	struct cam_vfe_top_ver2_priv *top_priv,
 	void *cmd_args, uint32_t arg_size)
