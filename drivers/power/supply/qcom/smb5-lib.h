@@ -152,6 +152,9 @@ enum print_reason {
 #define TYPEC_DEFAULT_CURRENT_UA	900000
 #define TYPEC_MEDIUM_CURRENT_UA		1500000
 #define TYPEC_HIGH_CURRENT_UA		3000000
+#define DCIN_ICL_MIN_UA			100000
+#define DCIN_ICL_MAX_UA			1500000
+#define DCIN_ICL_STEP_UA		100000
 
 /*DCIN ICL*/
 #define PSNS_CURRENT_SAMPLE_RATE 1053
@@ -465,6 +468,8 @@ struct smb_charger {
 	struct mutex		dr_lock;
 	struct mutex		irq_status_lock;
 	spinlock_t		typec_pr_lock;
+	struct mutex		dcin_aicl_lock;
+	struct mutex		dpdm_lock;
 
 	/* power supplies */
 	struct power_supply		*batt_psy;
@@ -494,6 +499,7 @@ struct smb_charger {
 
 	/* CC Mode */
 	int	adapter_cc_mode;
+	int	thermal_overheat;
 
 	/* regulators */
 	struct smb_regulator	*vbus_vreg;
@@ -547,6 +553,7 @@ struct smb_charger {
 	struct alarm		lpd_recheck_timer;
 	struct alarm		moisture_protection_alarm;
 	struct alarm		chg_termination_alarm;
+	struct alarm		dcin_aicl_alarm;
 
 	struct charger_param	chg_param;
 	/* secondary charger config */
@@ -666,6 +673,8 @@ struct smb_charger {
 	int			init_thermal_ua;
 	u32			comp_clamp_level;
 	bool			hvdcp3_standalone_config;
+	int			wls_icl_ua;
+	bool			dpdm_enabled;
 
 	/* workaround flag */
 	u32			wa_flags;
@@ -783,6 +792,7 @@ irqreturn_t usb_source_change_irq_handler(int irq, void *data);
 irqreturn_t icl_change_irq_handler(int irq, void *data);
 irqreturn_t typec_state_change_irq_handler(int irq, void *data);
 irqreturn_t typec_attach_detach_irq_handler(int irq, void *data);
+irqreturn_t dcin_uv_irq_handler(int irq, void *data);
 irqreturn_t dc_plugin_irq_handler(int irq, void *data);
 irqreturn_t high_duty_cycle_irq_handler(int irq, void *data);
 irqreturn_t switcher_power_ok_irq_handler(int irq, void *data);
@@ -885,6 +895,8 @@ int smblib_get_prop_charger_temp(struct smb_charger *chg,
 int smblib_get_prop_die_health(struct smb_charger *chg);
 int smblib_get_prop_smb_health(struct smb_charger *chg);
 int smblib_get_prop_connector_health(struct smb_charger *chg);
+int smblib_set_prop_thermal_overheat(struct smb_charger *chg,
+			       int therm_overheat);
 int smblib_get_skin_temp_status(struct smb_charger *chg);
 int smblib_get_prop_vph_voltage_now(struct smb_charger *chg,
 				union power_supply_propval *val);
