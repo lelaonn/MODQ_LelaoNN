@@ -228,6 +228,19 @@ struct cam_context {
 };
 
 /**
+ * struct cam_context_dump_header -  Function for context dump header
+ *
+ * @tag         :    Tag for context dump header
+ * @size        :    Size of data
+ * @word_size   :    Word size of data
+ */
+struct cam_context_dump_header {
+	char      tag[CAM_CONTEXT_DUMP_TAG_MAX_LEN];
+	uint64_t  size;
+	uint32_t  word_size;
+};
+
+/**
  * cam_context_shutdown()
  *
  * @brief:        Calls while device close or shutdown

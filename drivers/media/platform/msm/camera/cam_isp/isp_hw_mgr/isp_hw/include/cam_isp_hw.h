@@ -248,4 +248,39 @@ struct cam_isp_hw_dual_isp_update_args {
 	struct cam_isp_resource_node    *res;
 	struct cam_isp_dual_config      *dual_cfg;
 };
+
+/*
+ * struct cam_isp_hw_dump_args:
+ *
+ * @Brief:        isp hw dump args
+ *
+ * @ req_id:         request id
+ * @ cpu_addr:       cpu address
+ * @ buf_len:        buf len
+ * @ offset:         offset of buffer
+ * @ ctxt_to_hw_map: ctx to hw map
+ */
+struct cam_isp_hw_dump_args {
+	uint64_t                req_id;
+	uintptr_t               cpu_addr;
+	size_t                  buf_len;
+	uint32_t                offset;
+	void                    *ctxt_to_hw_map;
+};
+
+/**
+ * struct cam_isp_hw_dump_header - ISP context dump header
+ *
+ * @Brief:        isp hw dump header
+ *
+ * @tag:       Tag name for the header
+ * @word_size: Size of word
+ * @size:      Size of data
+ *
+ */
+struct cam_isp_hw_dump_header {
+	char      tag[CAM_ISP_HW_DUMP_TAG_MAX_LEN];
+	uint64_t  size;
+	uint32_t  word_size;
+};
 #endif /* _CAM_ISP_HW_H_ */

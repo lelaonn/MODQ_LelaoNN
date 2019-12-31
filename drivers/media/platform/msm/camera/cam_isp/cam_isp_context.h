@@ -40,6 +40,21 @@
  */
 #define CAM_ISP_CTX_STATE_MONITOR_MAX_ENTRIES   20
 
+/*
+ * Response time in ms threshold beyond which a request is not expected
+ * to be with IFE hw
+ */
+#define CAM_ISP_CTX_RESPONSE_TIME_THRESHOLD   100000
+
+/* Min length for dumping isp context */
+#define CAM_ISP_CTX_DUMP_MIN_LENGTH   2048
+
+/* Maximum entries in event record */
+#define CAM_ISP_CTX_EVENT_RECORD_MAX_ENTRIES   20
+
+/* Maximum length of tag while dumping */
+#define CAM_ISP_CONTEXT_DUMP_TAG_MAX_LEN 32
+
 /* forward declaration */
 struct cam_isp_context;
 
@@ -102,6 +117,8 @@ struct cam_isp_ctx_irq_ops {
  * @bubble_report:         Flag to track if bubble report is active on
  *                         current request
  * @hw_update_data:        HW update data for this request
+ * @event_timestamp:       Timestamp for different stage of request
+ * @bubble_detected:       Flag to indicate if bubble detected
  *
  */
 struct cam_isp_ctx_req {
@@ -117,6 +134,8 @@ struct cam_isp_ctx_req {
 	uint32_t                              num_acked;
 	int32_t                               bubble_report;
 	struct cam_isp_prepare_hw_update_data hw_update_data;
+	struct timeval                        event_timestamp
+	    [CAM_ISP_CTX_EVENT_MAX];
 	bool                                  bubble_detected;
 };
 
@@ -161,6 +180,8 @@ struct cam_isp_context_state_monitor {
  * @last_applied_req_id:       Last applied request id
  * @state_monitor_head:        Write index to the state monitoring array
  * @cam_isp_ctx_state_monitor: State monitoring array
+ * @event_record_head:         Write index to the state monitoring array
+ * @event_record:              Event record array
  * @rdi_only_context:          Get context type information.
  *                             true, if context is rdi only context
  * @hw_acquired:               Indicate whether HW resources are acquired
@@ -194,6 +215,19 @@ struct cam_isp_context {
 	bool                             hw_acquired;
 	bool                             init_received;
 	bool                             split_acquire;
+};
+
+/**
+ * struct cam_isp_context_dump_header - ISP context dump header
+ * @tag:       Tag name for the header
+ * @word_size: Size of word
+ * @size:      Size of data
+ *
+ */
+struct cam_isp_context_dump_header {
+	char      tag[CAM_ISP_CONTEXT_DUMP_TAG_MAX_LEN];
+	uint64_t  size;
+	uint32_t  word_size;
 };
 
 /**
