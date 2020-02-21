@@ -1010,7 +1010,7 @@ error:
 	return rc;
 }
 
-unsigned int framerate_override;
+static unsigned int framerate_override;
 module_param(framerate_override, uint, 0444);
 
 static int dsi_panel_parse_timing(struct dsi_mode_info *mode,
@@ -1044,8 +1044,7 @@ static int dsi_panel_parse_timing(struct dsi_mode_info *mode,
 			mode->clk_rate_hz = 1265000000;
 		else if (framerate_override == 1)
 			mode->clk_rate_hz = 1210000000;
-	} else
-		framerate_override = 1;
+	}
 	display_mode->priv_info->clk_rate_hz = mode->clk_rate_hz;
 
 	rc = utils->read_u32(utils->data, "qcom,mdss-mdp-transfer-time-us",
@@ -1166,7 +1165,7 @@ static int dsi_panel_parse_timing(struct dsi_mode_info *mode,
 	}
 	if (framerate_override)
 		mode->h_sync_width = 8;
-	
+		
 	pr_debug("panel vert active:%d front_portch:%d back_porch:%d pulse_width:%d\n",
 		mode->v_active, mode->v_front_porch, mode->v_back_porch,
 		mode->v_sync_width);
