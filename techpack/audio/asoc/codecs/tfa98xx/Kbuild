@@ -82,8 +82,9 @@ CDEFINES +=	-DANI_LITTLE_BYTE_ENDIAN \
 		-DANI_COMPILER_TYPE_GCC \
 		-DANI_OS_TYPE_ANDROID=6 \
 		-DPTT_SOCK_SVC_ENABLE \
-		-D__linux__ \
-		-DDEBUG
+		-Wall\
+		-Werror\
+		-D__linux__
 
 
 ifneq (,$(filter $(TARGET_PRODUCT), davinci raphael raphaelin))
