@@ -5185,9 +5185,11 @@ static int panel_disp_param_send_lock(struct dsi_panel *panel, int param)
 		break;
 	case DISPPARAM_DC_ON:
 		panel->dc_enable = true;
+		skip_reinit = true;
 		break;
 	case DISPPARAM_DC_OFF:
 		panel->dc_enable = false;
+		skip_reinit = false;
 		break;
 	case DISPPARAM_HBM_FOD_OFF:
 		if (panel->elvss_dimming_check_enable) {
