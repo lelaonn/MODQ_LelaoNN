@@ -16,6 +16,7 @@
 #include "include/cam_csiphy_1_1_hwreg.h"
 #include "include/cam_csiphy_1_0_hwreg.h"
 #include "include/cam_csiphy_1_2_hwreg.h"
+#include "include/cam_csiphy_1_2_2_hwreg.h"
 #include "include/cam_csiphy_2_0_hwreg.h"
 
 #define CSIPHY_3PH_DIVISOR           16
