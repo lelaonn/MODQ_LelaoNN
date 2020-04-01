@@ -814,6 +814,10 @@ CONFIG_PACKAGE_RUNTIME_INFO=y
 # Add required Xiaomi flags to build
 CONFIG_BUILD_ARM64_DT_OVERLAY=y
 CONFIG_MODULE_FORCE_LOAD=y
+
+# Add Qcom's Wlan driver
+CONFIG_QCA_CLD_WLAN=y
+
 # F2FS support with optimal speed settings
 CONFIG_F2FS_FS=y
 CONFIG_F2FS_STAT_FS=y
