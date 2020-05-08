@@ -1,7 +1,7 @@
 /*
  * QTI Secure Execution Environment Communicator (QSEECOM) driver
  *
- * Copyright (c) 2012-2019, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2012-2020, The Linux Foundation. All rights reserved.
  * Copyright (C) 2019 XiaoMi, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -192,6 +192,13 @@ struct sglist_info {
 
 #define MAKE_WHITELIST_VERSION(major, minor, patch) \
 	(((major & 0x3FF) << 22) | ((minor & 0x3FF) << 12) | (patch & 0xFFF))
+
+#define MAKE_NULL(sgt, attach, dmabuf) do {\
+				sgt = NULL;\
+				attach = NULL;\
+				dmabuf = NULL;\
+				} while (0)
+
 
 struct qseecom_registered_listener_list {
 	struct list_head                 list;
@@ -1270,6 +1277,7 @@ static int qseecom_vaddr_map(int ion_fd,
 err_unmap:
 	dma_buf_end_cpu_access(new_dma_buf, DMA_BIDIRECTIONAL);
 	qseecom_dmabuf_unmap(new_sgt, new_attach, new_dma_buf);
+	MAKE_NULL(*sgt, *attach, *dmabuf);
 err:
 	return ret;
 }
@@ -1344,9 +1352,11 @@ static int __qseecom_set_sb_memory(struct qseecom_registered_listener_list *svc,
 	}
 	return 0;
 err:
-	if (svc->dmabuf)
+	if (svc->dmabuf) {
 		qseecom_vaddr_unmap(svc->sb_virt, svc->sgt, svc->attach,
 			svc->dmabuf);
+		 MAKE_NULL(svc->sgt, svc->attach, svc->dmabuf);
+	}
 	return ret;
 }
 
@@ -1462,9 +1472,11 @@ static int __qseecom_unregister_listener(struct qseecom_dev_handle *data,
 	}
 
 exit:
-	if (ptr_svc->dmabuf)
+	if (ptr_svc->dmabuf) {
 		qseecom_vaddr_unmap(ptr_svc->sb_virt,
 			ptr_svc->sgt, ptr_svc->attach, ptr_svc->dmabuf);
+		 MAKE_NULL(ptr_svc->sgt, ptr_svc->attach, ptr_svc->dmabuf);
+	}
 
 	list_del(&ptr_svc->list);
 	kzfree(ptr_svc);
@@ -1869,9 +1881,12 @@ static int qseecom_set_client_mem_param(struct qseecom_dev_handle *data,
 
 	return ret;
 exit:
-	if (data->client.dmabuf)
+	if (data->client.dmabuf) {
 		qseecom_vaddr_unmap(data->client.sb_virt, data->client.sgt,
 			 data->client.attach, data->client.dmabuf);
+		MAKE_NULL(data->client.sgt,
+			data->client.attach, data->client.dmabuf);
+	}
 	return ret;
 }
 
@@ -2801,8 +2816,10 @@ static int qseecom_load_app(struct qseecom_dev_handle *data, void __user *argp)
 
 loadapp_err:
 	__qseecom_disable_clk_scale_down(data);
-	if (dmabuf)
+	if (dmabuf) {
 		qseecom_vaddr_unmap(vaddr, sgt, attach, dmabuf);
+		MAKE_NULL(sgt, attach, dmabuf);
+	}
 enable_clk_err:
 	if (qseecom.support_bus_scaling) {
 		mutex_lock(&qsee_bw_mutex);
@@ -2980,9 +2997,12 @@ unload_exit:
 								flags1);
 	}
 
-	if (data->client.dmabuf)
+	if (data->client.dmabuf) {
 		qseecom_vaddr_unmap(data->client.sb_virt, data->client.sgt,
 			data->client.attach, data->client.dmabuf);
+		MAKE_NULL(data->client.sgt,
+			data->client.attach, data->client.dmabuf);
+	}
 	data->released = true;
 	return ret;
 }
@@ -3817,8 +3837,10 @@ static int __qseecom_update_cmd_buf(void *msg, bool cleanup,
 	}
 	return ret;
 err:
-	if (!IS_ERR_OR_NULL(sg_ptr))
+	if (!IS_ERR_OR_NULL(sg_ptr)) {
 		qseecom_dmabuf_unmap(sg_ptr, attach, dmabuf);
+		MAKE_NULL(sg_ptr, attach, dmabuf);
+	}
 	return -ENOMEM;
 }
 
@@ -4056,8 +4078,10 @@ err:
 				data->client.sec_buf_fd[i].size,
 				data->client.sec_buf_fd[i].vbase,
 				data->client.sec_buf_fd[i].pbase);
-	if (!IS_ERR_OR_NULL(sg_ptr))
+	if (!IS_ERR_OR_NULL(sg_ptr)) {
 		qseecom_dmabuf_unmap(sg_ptr, attach, dmabuf);
+		MAKE_NULL(sg_ptr, attach, dmabuf);
+	}
 	return -ENOMEM;
 }
 
@@ -5609,8 +5633,10 @@ exit_register_bus_bandwidth_needs:
 	}
 
 exit_cpu_restore:
-	if (dmabuf)
+	if (dmabuf) {
 		qseecom_vaddr_unmap(va, sgt, attach, dmabuf);
+		MAKE_NULL(sgt, attach, dmabuf);
+	}
 	return ret;
 }
 
@@ -6876,8 +6902,10 @@ clean:
 	}
 	return ret;
 err:
-	if (!IS_ERR_OR_NULL(sg_ptr))
+	if (!IS_ERR_OR_NULL(sg_ptr)) {
 		qseecom_dmabuf_unmap(sg_ptr, attach, dmabuf);
+		MAKE_NULL(sg_ptr, attach, dmabuf);
+	}
 	return -ENOMEM;
 }
 
@@ -8023,10 +8051,13 @@ static int qseecom_release(struct inode *inode, struct file *file)
 			break;
 		case QSEECOM_SECURE_SERVICE:
 		case QSEECOM_GENERIC:
-			if (data->client.dmabuf)
+			if (data->client.dmabuf) {
 				qseecom_vaddr_unmap(data->client.sb_virt,
 					data->client.sgt, data->client.attach,
 					data->client.dmabuf);
+				MAKE_NULL(data->client.sgt, data->client.attach,
+					data->client.dmabuf);
+			}
 			break;
 		case QSEECOM_UNAVAILABLE_CLIENT_APP:
 			break;
