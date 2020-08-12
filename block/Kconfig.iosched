@@ -43,13 +43,20 @@ config CFQ_GROUP_IOSCHED
 choice
 
 	prompt "Default I/O scheduler"
-	default DEFAULT_CFQ
+	default DEFAULT_DEADLINE
 	help
 	  Select the I/O scheduler which will be used by default for all
 	  block devices.
 
-	config DEFAULT_DEADLINE
-		bool "Deadline" if IOSCHED_DEADLINE=y
+    config DEFAULT_KYBER
+ 		bool "KYBER" if MQ_IOSCHED_KYBER=y
+		select SCSI
+		select SCSI_MQ_DEFAULT
+
+ 	config DEFAULT_DEADLINE
+ 		bool "Deadline" if IOSCHED_DEADLINE=y
+		select SCSI if MQ_IOSCHED_DEADLINE=y
+		select SCSI_MQ_DEFAULT
 
 	config DEFAULT_CFQ
 		bool "CFQ" if IOSCHED_CFQ=y
