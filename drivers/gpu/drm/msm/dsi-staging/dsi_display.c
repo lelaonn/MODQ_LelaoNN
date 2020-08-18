@@ -1253,6 +1253,8 @@ int dsi_display_set_power(struct drm_connector *connector,
 	case SDE_MODE_DPMS_LP1:
 		msm_drm_notifier_call_chain(MSM_DRM_EARLY_EVENT_BLANK, &g_notify_data);
 		rc = dsi_panel_set_lp1(display->panel);
+		if (!rc)
+			dsi_panel_set_doze_backlight(display);
 		msm_drm_notifier_call_chain(MSM_DRM_EVENT_BLANK, &g_notify_data);
 		break;
 	case SDE_MODE_DPMS_LP2:
