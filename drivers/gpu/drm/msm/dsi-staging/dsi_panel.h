@@ -272,6 +272,7 @@ struct dsi_panel {
 
 	u32 dc_threshold;
 	bool dc_enable;
+	bool fod_dimlayer_bl_block;
 
 	int power_mode;
 	enum dsi_panel_physical_type panel_type;
