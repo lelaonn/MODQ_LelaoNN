@@ -755,8 +755,8 @@ int sde_connector_update_hbm(struct sde_connector *c_conn)
 			/* FIXME: mutex_lock(&dsi_display->panel->panel_lock); */
 			/* Add delay for hbm off */
 			sde_encoder_wait_for_event(c_conn->encoder, MSM_ENC_VBLANK);
-			if ((dsi_display->drm_dev && dsi_display->drm_dev->state == MSM_DRM_BLANK_LP1) ||
-				(dsi_display->drm_dev && dsi_display->drm_dev->state == MSM_DRM_BLANK_LP2)) {
+			if ((dsi_display->drm_dev && dsi_display->drm_dev->doze_state == MSM_DRM_BLANK_LP1) ||
+				(dsi_display->drm_dev && dsi_display->drm_dev->doze_state == MSM_DRM_BLANK_LP2)) {
 				if (dsi_display->panel->last_bl_lvl > dsi_display->panel->doze_backlight_threshold) {
 					dsi_display->panel->hbm_enabled = false;
 					dsi_display->panel->fod_dimlayer_hbm_enabled = false;
