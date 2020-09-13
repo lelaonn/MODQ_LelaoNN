@@ -45,6 +45,10 @@
 Module.symvers
 modules.builtin
 
+kernel.log
+out-proton9TP/
+out-proton/
+
 #
 # Top-level generic files
 #
