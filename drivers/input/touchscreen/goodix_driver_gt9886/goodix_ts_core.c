@@ -28,7 +28,7 @@
 #include <linux/debugfs.h>
 #include <linux/of_irq.h>
 #ifdef CONFIG_DRM
-#include <drm/drm_notifier.h>
+#include <linux/msm_drm_notify.h>
 #include <linux/notifier.h>
 #include <linux/fb.h>
 #endif
@@ -939,6 +939,7 @@ static void goodix_ts_sleep_work(struct work_struct *work)
 
 	ts_info("enter");
 
+        core_data->fod_ok = 0;
 	if (core_data->tp_already_suspend) {
 		r = wait_for_completion_timeout(&core_data->pm_resume_completion, msecs_to_jiffies(500));
 		if (!r) {
@@ -1269,7 +1270,7 @@ static ssize_t gtp_fod_status_show(struct device *dev,
 {
 	struct goodix_ts_core *core_data = dev_get_drvdata(dev);
 
-	return snprintf(buf, 10, "%d\n", core_data->fod_status);
+	return snprintf(buf, 10, "%d\n", core_data->fod_ok);
 }
 
 static ssize_t gtp_fod_status_store(struct device *dev,
@@ -1279,7 +1280,7 @@ static ssize_t gtp_fod_status_store(struct device *dev,
 	struct goodix_ts_core *core_data = dev_get_drvdata(dev);
 	//struct goodix_ts_event *ts_event = &core_data->ts_event;
 	ts_info("buf:%s, count:%zu\n", buf, count);
-	sscanf(buf, "%u", &core_data->fod_status);
+	sscanf(buf, "%u", &core_data->fod_ok);
 
 	//goodix_ts_input_report(core_data->input_dev,&ts_event->event_data.touch_data);
 	core_data->gesture_enabled = core_data->double_wakeup | core_data->fod_status;
@@ -1853,21 +1854,21 @@ int goodix_ts_fb_notifier_callback(struct notifier_block *self,
 {
 	struct goodix_ts_core *core_data =
 		container_of(self, struct goodix_ts_core, fb_notifier);
-	struct drm_notify_data *fb_event = data;
+	struct msm_drm_notifier *fb_event = data;
 	int blank;
 
 	if (fb_event && fb_event->data && core_data) {
 		blank = *(int *)(fb_event->data);
 		flush_workqueue(core_data->event_wq);
-		if (event == DRM_EVENT_BLANK && (blank == DRM_BLANK_POWERDOWN ||
-			blank == DRM_BLANK_LP1 || blank == DRM_BLANK_LP2)) {
+		if (event == MSM_DRM_EVENT_BLANK && (blank == MSM_DRM_BLANK_POWERDOWN ||
+			blank == MSM_DRM_BLANK_LP1 || blank == MSM_DRM_BLANK_LP2)) {
 			ts_info("touchpanel suspend .....blank=%d\n",blank);
 			ts_info("touchpanel suspend .....suspend_stat=%d\n", atomic_read(&core_data->suspend_stat));
 			if (atomic_read(&core_data->suspend_stat))
 				return 0;
-			ts_info("touchpanel suspend by %s", blank == DRM_BLANK_POWERDOWN ? "blank" : "doze");
+			ts_info("touchpanel suspend by %s", blank == MSM_DRM_BLANK_POWERDOWN ? "blank" : "doze");
 			queue_work(core_data->event_wq, &core_data->suspend_work);
-		} else if (event == DRM_EVENT_BLANK && blank == DRM_BLANK_UNBLANK) {
+		} else if (event == MSM_DRM_EVENT_BLANK && blank == MSM_DRM_BLANK_UNBLANK) {
 			//if (!atomic_read(&core_data->suspend_stat))
 			ts_info("core_data->suspend_stat = %d\n",atomic_read(&core_data->suspend_stat));
 			ts_info("touchpanel resume");
@@ -1909,12 +1910,14 @@ static void goodix_ts_resume_work(struct work_struct *work)
 {
 	struct goodix_ts_core *core_data =
 		container_of(work, struct goodix_ts_core, resume_work);
+        core_data->fod_ok = 0;
 	goodix_ts_resume(core_data);
 }
 static void goodix_ts_suspend_work(struct work_struct *work)
 {
 	struct goodix_ts_core *core_data =
 		container_of(work, struct goodix_ts_core, suspend_work);
+        core_data->fod_ok = 0;
 	goodix_ts_suspend(core_data);
 }
 
@@ -1948,6 +1951,7 @@ static int goodix_ts_pm_resume(struct device *dev)
 
 	core_data->tp_already_suspend = false;
 	complete(&core_data->pm_resume_completion);
+        core_data->fod_ok = 0;
 
 	return 0;
 }
@@ -2625,6 +2629,7 @@ static int goodix_ts_probe(struct platform_device *pdev)
 	device_init_wakeup(&pdev->dev, 1);
 
 	core_data->is_usb_exist = -1;
+        core_data->fod_status = 1;
 	/*i2c test*/
 	r = ts_device->hw_ops->read_trans(ts_device, 0x3100, &read_val, 1);
 	if (!r)
@@ -2733,7 +2738,7 @@ static int goodix_ts_remove(struct platform_device *pdev)
 {
 	struct goodix_ts_core *core_data = platform_get_drvdata(pdev);
 #ifdef CONFIG_DRM
-	drm_unregister_client(&core_data->fb_notifier);
+	msm_drm_unregister_client(&core_data->fb_notifier);
 #endif
 	//wake_lock_destroy(&core_data->tp_wakelock);
 	power_supply_unreg_notifier(&core_data->power_supply_notifier);
