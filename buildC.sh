@@ -23,7 +23,7 @@ KERNEL_DIR=`pwd`
 ZIMAGE_DIR="${PWD}/out-proton/arch/arm64/boot/"
 
 # Kernel Details
-VER=".1.7"
+VER=".1.8_FINAL"
 
 # Vars
 BASE_AK_VER="MOD_LELAONN"
