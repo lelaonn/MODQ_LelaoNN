@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2020, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2017-2018, The Linux Foundation. All rights reserved.
  * Copyright (C) 2019 XiaoMi, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -119,7 +119,7 @@ const char *cam_get_module_name(unsigned int module_id);
  * @args     :  Arguments which needs to be print in log
  */
 #define CAM_INFO_RATE_LIMIT(__module, fmt, args...)                 \
-	pr_info_ratelimited("CAM_INFO: %s: %s: %d " fmt "\n",            \
+	pr_err_ratelimited("CAM_INFO: %s: %s: %d " fmt "\n",            \
 		cam_get_module_name(__module), __func__,  __LINE__, ##args)
 
 /*

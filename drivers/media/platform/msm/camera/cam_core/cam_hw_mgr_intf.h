@@ -145,11 +145,11 @@ struct cam_hw_stop_args {
  * struct cam_hw_mgr_dump_pf_data - page fault debug data
  *
  * packet:     pointer to packet
- * ctx:        pointer to cam context
+ * ctx_id:     context id
  */
 struct cam_hw_mgr_dump_pf_data {
-	void *packet;
-	void *ctx;
+	void    *packet;
+	uint32_t ctx_id;
 };
 
 /**
@@ -212,7 +212,6 @@ struct cam_hw_stream_setttings {
  * @num_out_map_entries:   Number of out map entries
  * @priv:                  Private pointer
  * @request_id:            Request ID
- * @reapply                True if reapplying after bubble
  *
  */
 struct cam_hw_config_args {
@@ -224,7 +223,6 @@ struct cam_hw_config_args {
 	void                           *priv;
 	uint64_t                        request_id;
 	bool                            init_packet;
-	bool                            reapply;
 };
 
 /**
